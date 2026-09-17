@@ -41,9 +41,6 @@ export async function loadEvaluatorEnv() {
   if (!port || !/^\d+$/.test(port) || Number(port) < 1 || Number(port) > 65535) {
     throw new Error("SETUP: PORT in backend/.env must be a valid TCP port");
   }
-  if (!merged.OPENAI_API_KEY || !merged.OPENAI_MODEL) {
-    throw new Error("SETUP: OPENAI_API_KEY and OPENAI_MODEL must be configured in backend/.env");
-  }
   if (!merged.JWT_SECRET) {
     throw new Error("SETUP: JWT_SECRET must be configured in backend/.env");
   }
@@ -60,7 +57,9 @@ export async function loadEvaluatorEnv() {
     baseUrl: `http://127.0.0.1:${port}`,
     evaluatorToken: childEnv.EVALUATOR_RESET_TOKEN,
     childEnv,
-    secrets: [merged.OPENAI_API_KEY, merged.JWT_SECRET].filter((value): value is string => !!value),
+    secrets: Object.entries(merged)
+      .filter(([key, value]) => !!value && /(API_KEY|SECRET|TOKEN)$/i.test(key))
+      .map(([, value]) => value!),
   };
 }
 

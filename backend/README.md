@@ -50,14 +50,19 @@ cp .env.example .env
 bun run dev
 ```
 
-Set a real AI key and model in `.env`:
+Set a real AI key and a tool-capable model in `.env`. OpenRouter example:
 
 ```env
 PORT=3000
 JWT_SECRET=replace-me
-OPENAI_API_KEY=replace-me
-OPENAI_MODEL=replace-me
+OPENROUTER_API_KEY=replace-me
+OPENROUTER_MODEL=google/gemini-2.5-flash
 ```
+
+You may use any AI provider and its documented environment-variable names. For an OpenAI-compatible
+provider, you may use `AI_API_KEY`, `AI_MODEL`, and `AI_BASE_URL`; direct OpenAI configuration may use
+`OPENAI_API_KEY` and `OPENAI_MODEL`. The evaluator passes all values from `.env` to the server and does
+not create a fake model service. The selected model must support function/tool calling.
 
 Required commands:
 
@@ -128,8 +133,11 @@ trust the model to enforce them.
 - Refunds above ₹2,000 create one pending action and move the ticket to `AWAITING_APPROVAL`.
 - An order can receive only one refund or replacement in total.
 - Action tools must be atomic and idempotent.
+- Retrying the same action for the same ticket, order, and action type must return the existing action
+  without applying its side effects again. A different action for that order must be rejected.
 - Validate all tool arguments.
 - Persist every tool call, including arguments, result or safe error, status, and sequence number.
+  Sequence numbers start at 1 for each agent run, and failed calls count toward the 6-call limit.
 - Never store or return hidden chain-of-thought.
 
 For an action mutation, perform the final duplicate/stock validation and mutation synchronously without
@@ -140,7 +148,8 @@ critical section.
 
 - Change the ticket to `PROCESSING` before the first model call.
 - Allow at most 6 tool calls per run.
-- Retry a failed tool at most once. If the same tool fails twice, escalate.
+- Retry an identical failed tool call—same tool name and arguments—at most once. If that call fails
+  twice, escalate.
 - Prevent two runs from executing simultaneously for the same ticket.
 - Missing information may produce `NEEDS_INFORMATION` with a clear question.
 - Provider failure leaves the ticket as `FAILED` and returns `502 MODEL_PROVIDER_ERROR`.
@@ -224,6 +233,10 @@ Route names are exact.
 | POST | `/api/tickets/:ticketId/run` | Owner/Support |
 | POST | `/api/tickets/:ticketId/approval` | Support |
 | POST | `/api/tickets/:ticketId/escalate` | Support |
+
+Generated IDs must use the documented prefix followed by a unique value: `TKT-`, `MSG-`, `RUN-`,
+`TC-`, `ACT-`, and `APR-`. All timestamps must be valid ISO 8601 strings. Request bodies must be JSON
+objects. Ignore unknown request fields unless a route explicitly documents otherwise.
 
 ### `GET /health`
 
@@ -327,6 +340,8 @@ Messages and tool calls are oldest first. Errors: `404 TICKET_NOT_FOUND`,
 { "content": "The order number is ORD-1001." }
 ```
 
+`content` must contain 1–2000 characters after trimming.
+
 Allowed in `OPEN` or `NEEDS_INFORMATION`. Adding information to `NEEDS_INFORMATION` changes it to
 `OPEN`.
 
@@ -392,7 +407,11 @@ Support only.
 ```
 
 `decision` must be `APPROVED` or `REJECTED`. Approval completes the refund and resolves the ticket.
-Rejection marks the action rejected and escalates the ticket.
+Rejection marks the action rejected and escalates the ticket. `note` is optional and may contain up to
+500 characters.
+
+Both decisions return the same action shape. A rejection returns ticket status `ESCALATED` and action
+status `REJECTED`; an approval returns ticket status `RESOLVED` and action status `COMPLETED`.
 
 Errors: `400 VALIDATION_ERROR`, `403 FORBIDDEN`, `404 TICKET_NOT_FOUND`,
 `409 NO_PENDING_APPROVAL`.
@@ -404,6 +423,9 @@ Support only. Allowed for `OPEN`, `NEEDS_INFORMATION`, and `AWAITING_APPROVAL`.
 ```json
 { "reason": "Issue requires manual review." }
 ```
+
+`reason` must contain 10–500 characters after trimming. If a ticket with a pending action is manually
+escalated, mark that pending action `REJECTED` so no orphaned pending approval remains.
 
 Errors: `400 VALIDATION_ERROR`, `403 FORBIDDEN`, `404 TICKET_NOT_FOUND`,
 `409 INVALID_TICKET_STATE`.

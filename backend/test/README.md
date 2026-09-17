@@ -4,9 +4,11 @@ These are black-box contract tests for the S30 AI Customer Support Agent assignm
 student server with `bun run start`, call only the documented HTTP routes, and use the real provider
 configuration from `backend/.env`.
 
-`OPENAI_API_KEY`, `OPENAI_MODEL`, `JWT_SECRET`, and `PORT` are loaded from `backend/.env`. Secrets are
-never printed by the helpers. The evaluator generates a private reset token, starts the server with
-`NODE_ENV=test`, and calls the boilerplate-provided `POST /__test/reset` between scenarios.
+AI provider configuration, `JWT_SECRET`, and `PORT` are loaded from `backend/.env`. The evaluator passes
+all provider-specific variables to the student server, so students may use any real provider. Values
+whose names end in `API_KEY`, `SECRET`, or `TOKEN` are treated as secrets and are never printed by the
+helpers. The evaluator generates a private reset token, starts the server with `NODE_ENV=test`, and
+calls the boilerplate-provided `POST /__test/reset` between scenarios.
 
 Required student scripts:
 
