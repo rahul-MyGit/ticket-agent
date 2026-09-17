@@ -23,6 +23,11 @@ bun test
 Real-model scenarios have three-minute per-test timeouts and avoid assertions about exact prose or
 read-only tool ordering.
 
+Negative-path checks intentionally allow implementation flexibility: an error response must use the
+documented HTTP status and return JSON, but the evaluator does not require an exact error code, message,
+`details` value, or exact error-envelope key set. Successful response contracts and business side
+effects remain strict.
+
 Failures prefixed with `SETUP:` are environment/lifecycle failures. Failures in route assertions are
 contract failures. Inventory and action invariants are observed through the guarded, sanitized
 `GET /__test/state` endpoint supplied by the boilerplate.

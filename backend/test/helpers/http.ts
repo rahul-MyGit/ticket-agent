@@ -33,26 +33,21 @@ export async function api<T = unknown>(
 
   expect(response.headers.get("content-type")?.toLowerCase()).toContain("application/json");
   const body = (await response.json()) as SuccessEnvelope<T> | ErrorEnvelope;
-  assertEnvelope(body);
+  assertEnvelope(body, response.ok);
   return { status: response.status, body, headers: response.headers };
 }
 
-export function assertEnvelope(body: unknown): asserts body is SuccessEnvelope<unknown> | ErrorEnvelope {
+export function assertEnvelope(
+  body: unknown,
+  successfulResponse = true,
+): asserts body is SuccessEnvelope<unknown> | ErrorEnvelope {
   expect(body).toBeObject();
-  const record = body as Record<string, unknown>;
-  expect(typeof record.success).toBe("boolean");
+  if (!successfulResponse) return;
 
-  if (record.success === true) {
-    expect(Object.keys(record).sort()).toEqual(["data", "success"]);
-    expect(record).toHaveProperty("data");
-  } else {
-    expect(Object.keys(record).sort()).toEqual(["error", "success"]);
-    expect(record.error).toBeObject();
-    const error = record.error as Record<string, unknown>;
-    expect(typeof error.code).toBe("string");
-    expect(typeof error.message).toBe("string");
-    expect(Object.keys(error).every((key) => ["code", "message", "details"].includes(key))).toBe(true);
-  }
+  const record = body as Record<string, unknown>;
+  expect(record.success).toBe(true);
+  expect(Object.keys(record).sort()).toEqual(["data", "success"]);
+  expect(record).toHaveProperty("data");
 }
 
 export function expectSuccess<T>(result: ApiResult<T>, status: number): T {
@@ -61,11 +56,9 @@ export function expectSuccess<T>(result: ApiResult<T>, status: number): T {
   return (result.body as SuccessEnvelope<T>).data;
 }
 
-export function expectError(result: ApiResult, status: number, code: string) {
+export function expectError(result: ApiResult, status: number, _code?: string) {
   expect(result.status).toBe(status);
-  expect(result.body.success).toBe(false);
-  expect((result.body as ErrorEnvelope).error.code).toBe(code);
-  return (result.body as ErrorEnvelope).error;
+  expect(result.body).toBeObject();
 }
 
 export function assertNoSensitiveData(value: unknown, secrets: string[]) {

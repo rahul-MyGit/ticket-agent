@@ -38,5 +38,4 @@ export async function getInventoryStock(evaluatorEnv: EvaluatorEnv, productId: s
 export async function expectEvaluatorRoutesAreGuarded(evaluatorEnv: EvaluatorEnv) {
   const result = await api(evaluatorEnv.baseUrl, "/__test/state");
   expect(result.status).toBe(404);
-  expect(result.body.success).toBe(false);
 }

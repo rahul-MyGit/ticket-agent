@@ -90,12 +90,10 @@ describe("S30 customer-support backend evaluator", () => {
 
     const missingToken = await api(evaluatorEnv.baseUrl, "/api/tickets");
     expect(missingToken.status).toBe(401);
-    expect(missingToken.body.success).toBe(false);
     const invalidToken = await api(evaluatorEnv.baseUrl, "/api/tickets", {
       token: "this.is.not-a-valid-jwt",
     });
     expect(invalidToken.status).toBe(401);
-    expect(invalidToken.body.success).toBe(false);
 
     for (const response of [health.body, wrongPassword.body, malformed.body, missingToken.body, invalidToken.body]) {
       assertNoSensitiveData(response, evaluatorEnv.secrets);
