@@ -1,6 +1,8 @@
 import { resolve } from "node:path";
 
-export const backendDir = resolve(import.meta.dir, "../..");
+export const backendDir = process.env.EVALUATOR_BACKEND_DIR
+  ? resolve(process.env.EVALUATOR_BACKEND_DIR)
+  : resolve(import.meta.dir, "../..");
 
 function parseEnv(source: string): Record<string, string> {
   const values: Record<string, string> = {};

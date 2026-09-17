@@ -1,0 +1,14 @@
+{
+  "name": "s30-ticket-agent-python-evaluator",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "uv run python -m app.main --reload",
+    "start": "uv run python -m app.main",
+    "test": "bun test"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "typescript": "^7.0.2"
+  }
+}

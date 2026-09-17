@@ -1,5 +1,12 @@
 # Dependencies
 node_modules/
+.venv/
+
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
 
 # Environment and secrets
 **/.env
@@ -24,4 +31,3 @@ logs/
 .idea/
 .vscode/
 .DS_Store
-

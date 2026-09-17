@@ -1,0 +1,17 @@
+[project]
+name = "s30-ticket-agent-python"
+version = "0.1.0"
+description = "Python boilerplate for the S30 AI Customer Support Agent contest"
+requires-python = ">=3.12"
+dependencies = [
+  "argon2-cffi>=23.1,<26",
+  "fastapi>=0.115,<1",
+  "openai>=1.50,<3",
+  "pyjwt>=2.9,<3",
+  "python-dotenv>=1.0,<2",
+  "uvicorn[standard]>=0.30,<1",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
